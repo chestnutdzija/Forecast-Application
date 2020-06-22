@@ -1,0 +1,56 @@
+        Forecast retrieval from National Oceanic and Atmospheric Administration (NOAA)
+
+    According to the assignment I implemented a sandalone Java program that interacts with NOAA
+    server through a free web service REST API to get the weather forecast for any point in North America.
+
+    My goal was to use just the basic java APIs as well as some minimal out-of-the-standard-Java libraries
+    in order to achieve the given task. In particular, in order to communicate with the NOAA REST services
+    I used HttpURLConnection class. For the REST services replies I needed a JSON parser since they are all 
+    in that format. I chose Jackson JSON parser since it's the most used one (especially in Spring Boot
+    framework). Therefore, the program needs three jar files that implements jackson JSON parser.
+
+    The whole program is represented as a single main class - ForecastApp and one helper class - Period
+    that served as a simple data container (and could be quite easily upgraded to store more info if needed).
+    All methods are defined as "private static" since I wanted to maximally simplify the implementation.
+    I could've used (and in the real application that has to be) a single ForecastApp instance and apply
+    all methods to that instance, in which case I would not need "static" modifier but for this simple
+    application I chose not to do so for the simplicity reason.
+
+    The task definition asks for a single input argument of longitude and latitude values as a single pair.
+    For that reeason I chose to input the argument as "-l lat,long" value. That's why the main method first
+    vewrifies that the program gets only two arguments - the first one must be "-l" (or -L) followed by a
+    pair of float numbers that I verify for conformity with a simple regular expression.
+
+    Once the input arguments are processed the program asks for the grid points defined by lat,long pair.
+    That is being done with a call to the first REST endpoint - https://api.weather.gov/points/{latitude},{longitude}.
+    The method that implements this is getPoints() that returns a JSON document that gets parsed by a call to
+    ObjectMapper's readValue() method (part of jackson JSON parser). Thus the first ObjectNode object is
+    created and used to get gridX and gridY values. In a similar way the program obtains the "office" value
+    that is needed for building the forecast query. Teh forecast query is built by calling buildForecastQuery()
+    method. Getting the forecast in JSON format is done in getForecast() method. The forecast data is represented
+    by an array of "periods". This "periods" array is represented by JsonNode object called periods in the program.
+    Since the task assignment asks for the printout of the forecast for the next five (5) days we need to make sure
+    that we print the forecast from tomorrow. That's why the program uses getFirstPeriod() method to figure out
+    what is the first forecast message to print from the obtained array of forecasts.
+
+    Pretty printing of forecasts is done in a simple manner by first printing the header message which gets
+    underscored by a line of equal characters ("=") followed by a list of forecasts. Each day forecast is
+    underscored by a line of '-' characters such that it completely "covers" the previous line.
+
+    In case the user wrongly inputs the required arguments the program displays the usage message and exits.
+    I alos implemented a simple debug method that prints a debug message that gets activated if the program gets
+    compiled with debugFlag set to true.
+
+
+
+    To runn the application you can take a look at the following commands for examples:
+
+    java -cp jackson-core-2.11.0.jar:jackson-databind-2.11.0.jar:jackson-annotations-2.11.0.jar:. ForecastApp -l 39.7456,-97.0892
+
+    For Sunnyvale forecast you can use the following command:
+
+    java -cp jackson-core-2.11.0.jar:jackson-databind-2.11.0.jar:jackson-annotations-2.11.0.jar:. ForecastApp -l 37.36360852,-122.02171326
+
+    And for the taste of subtropical climate of Houston the following command can help:
+
+    java -cp jackson-core-2.11.0.jar:jackson-databind-2.11.0.jar:jackson-annotations-2.11.0.jar:. ForecastApp -l 29.746494,-95.37025452
